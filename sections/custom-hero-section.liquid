@@ -1,0 +1,100 @@
+<div class="hero-wrapper hero-wrapper--{{ section.id }}">
+    {% if section.settings.image != blank %}
+        <div class="hp-hero-image"></div>
+    {% endif %}
+    <div class="hero-caption-wrap">
+        {% if section.settings.title != blank %}
+            <h2>{{ section.settings.title }}
+                {% if section.settings.sub_title != blank %}
+                    <span>{{ section.settings.sub_title }}</span>
+                {% endif %}
+            </h2>
+        {% endif %}
+        {% if section.settings.text != blank %}
+            <div class="hero-text">{{ section.settings.text }}</div>
+        {% endif %}
+        {% if section.settings.sub_text != blank %}
+            <div class="hero-sub-text">{{ section.settings.sub_text }}</div>
+        {% endif %}
+        
+        {% if section.settings.cta_text != blank %}
+            <div class="hero-link"><a href="{{ section.settings.cta_link }}">
+                <span class="desktop-text">{{ section.settings.cta_text }}</span>
+                <span class="mobile-text">{{ section.settings.mobile_cta_text }}</span>
+                </a></div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .hero-wrapper--{{ section.id }} .hp-hero-image {
+        background-image: url({{ section.settings.image | img_url: '1600x' }});
+    }
+    @media screen and (max-width:767px){ 
+        {% if section.settings.mobile_image != blank %}
+        .hero-wrapper--{{ section.id }} .hp-hero-image {
+            background-image: url({{ section.settings.mobile_image | img_url: '800x' }});
+        }  
+        {% endif %}
+    }
+</style>
+
+
+{% schema %}
+{
+   "name": "HomePage Hero Banner",
+   "settings": [
+        {
+            "type": "image_picker",
+            "id": "image",
+            "label": "Image"
+        },
+        {
+            "type": "image_picker",
+            "id": "mobile_image",
+            "label": "Mobile Image"
+        },
+        {
+            "type": "text",
+            "id": "title",
+            "label": "Title"
+        },
+        {
+            "type": "text",
+            "id": "sub_title",
+            "label": "Sub Title"
+        },
+        {
+            "type": "richtext",
+            "id": "text",
+            "label": "Text"
+        },
+        {
+            "type": "richtext",
+            "id": "sub_text",
+            "label": "Sub Text"
+        },
+        {
+            "type": "text",
+            "id": "cta_text",
+            "label": "CTA Text"
+        },
+        {
+            "type": "text",
+            "id": "mobile_cta_text",
+            "label": "Mobile CTA Text"
+        },
+        {
+            "type": "url",
+            "id": "cta_link",
+            "label": "CTA Link"
+        }
+   ],
+   "presets": [
+     {
+       "name": "HomePage Hero Banner",
+       "category": "Custom"
+     }
+   ]
+}
+{% endschema %}

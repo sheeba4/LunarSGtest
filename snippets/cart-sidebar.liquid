@@ -1,0 +1,269 @@
+<div class="cart-black-overlay"></div>
+<div class="cart-sidebar hide">
+    <div class="cart-sidebar-container">
+        <div class="cart-sidebar--header">
+            <img src="{{ 'cart-logo.png' | asset_url }}">
+            <a href="javascript:void(0);"><img src="{{ 'arrow.png' | asset_url }}"></a>
+        </div>
+    </div>
+    <div class="cart-sidebar--items-wrpaper">
+        {% if cart.item_count > 0 %}
+        {% for item in cart.items %}
+        <div class="cart-sidebar-item">
+            <a href="javascript:void(0);" class="delete-cart-item"
+            data-itemid="{{ item.key }}">
+                {% include 'icon-close' %}
+            </a>
+            <div class="row align-items-center">
+                <div class="col-15">
+                    {{ item.image | img_url: '400x' | img_tag: item.product.title , 'cart-sidebar--itme-image'}}
+                </div>
+                <div class="col-45 h-100">
+                    <div class="sidebar-cart--product-info">
+                        <div class="row">
+                            <div class="col-60">
+                                <strong>{{ item.product.title }}</strong>
+                                <span>{{ item.variant.title }}</span>
+                                <span>{{ item.price | money }}</span>
+                            </div>
+                            <div class="col-60">
+                                <div class="row align-items-end">
+                                    <div class="col-30">
+                                        <button type="button" class="cart-sidebar--qty minus">-</button>
+                                        <input type="number" min="0" max="100" step="1" value="{{ item.quantity }}"
+                                            data-item="{{ item.id }}" name="cart-prod-qty" class="cart-prod-qty" />
+                                            <button type="button" class="cart-sidebar--qty plus">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="cart-sidebar-empty text-center">Your cart is thirsty</div>
+        {% endif %}
+    </div>
+    {% if cart.item_count > 0 %}
+    <div class="cart-sidebar--footer">
+        <div class="cart-sidebar--footer-subtotal">
+            <div class="row">
+                <div class="col-30">
+                    <strong>Subtotal</strong>
+                </div>
+                <div class="col-30 text-right">
+                    <strong class="cart-subtotals">{{ cart.total_price | money }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<script>
+    $(document).ready(function () {
+        //Add to Cart
+        $('body').on('click','.ajax-atc',function(e){
+            e.preventDefault();
+            var variant_id = $(this).data('ajax');
+            $.ajax({
+                url:'/cart/add.js',
+                method:'POST',
+                dataType:'json',
+                data:{'id':variant_id,'quantity':1},
+                success: function(cart){
+                    buildCart()
+                },
+                error: function(er){
+                    console.log(er)
+                }
+            })
+        })
+        //Delete Item From Cart
+        $('.cart-sidebar--items-wrpaper').on('click', '.delete-cart-item', function () {
+            var itemid = $(this).data('itemid');
+            var item = $(this).closest('.cart-sidebar-item');
+            $.ajax({
+                url: "/cart/change.js",
+                dataType: 'json',
+                data: {
+                    quantity: 0,
+                    id: itemid
+                },
+                success: function (resp) {
+                    buildCart();
+                }
+            })
+        });
+        //Update Item From Cart
+        $('.cart-sidebar--items-wrpaper').on('click', '.cart-sidebar--qty', function () {
+            if($(this).hasClass('plus')) {
+                var item_object = $(this).prev();
+                var item = item_object.data('item');
+                var qty = item_object.val(parseInt(item_object.val())+1).val();
+            } else {
+                var item_object = $(this).next();
+                var item = item_object.data('item');
+                var qty = item_object.val(parseInt(item_object.val())-1).val();;
+            }
+            console.log(`quty of ${item} is ${qty}`);
+            
+            $.ajax({
+                url: "/cart/change.js",
+                dataType: 'json',
+                data: {
+                    quantity: qty,
+                    id: item
+                },
+                success: function (cartdata) {
+                    $('.cart-sidebar--items-wrpaper').html('')
+                    var allItems = cartdata.items,
+                        items = [],
+                        item = {};
+
+                    // Add each item to our handlebars.js data
+                    $.each(allItems, function (index, varItem) {
+                        var imageSmall = Shopify.resizeImage(varItem.image, 'small');
+                        item = {
+                            id: varItem.id,
+                            title: varItem.product_title,
+                            variant: varItem.variant_title,
+                            saleprop: varItem.properties['Cyber Sale'],
+                            url: varItem.url,
+                            price: Shopify.formatMoney(varItem.price),
+                            quantity: varItem.quantity,
+                            image: imageSmall
+                        };
+                        let cart_item = `<div class="cart-sidebar-item">
+                                        <a href="javascript:void(0);" class="delete-cart-item"
+                                            data-itemid="${item.id}" referrerpolicy="origin">{% include 'icon-close' %}</a>
+                                        <div class="row align-items-center">
+                                            <div class="col-15">
+                                                <img src="${item.image}" alt="{{ title }}" class="cart-sidebar--itme-image" >
+                                            </div>
+                                            <div class="col-45 h-100">
+                                                <div class="sidebar-cart--product-info">
+                                                    <div class="row">
+                                                        <div class="col-60">
+                                                            <strong>${item.title}</strong>
+                                                            <span>${item.variant} </span>
+                                                            <span>${item.price}</span>
+                                                        </div>
+                                                        <div class="col-60">
+                                                            <div class="row align-items-end">
+                                                                <div class="col-30">
+                                                                <button type="button" class="cart-sidebar--qty minus">-</button>
+                                                                    <input type="number" min="0" max="100" step="1" value="${item.quantity}"
+                                                                        data-item="${ item.id }" name="cart-prod-qty" class="cart-prod-qty" />
+                                                                <button type="button" class="cart-sidebar--qty plus">+</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                    $('.cart-sidebar--items-wrpaper').append(cart_item);
+                        items.push(item);
+                    });
+
+
+                    // Gather all  data and add to DOM
+                    data = {
+                        total: Shopify.formatMoney(cartdata.total_price),
+                        variants: items
+                    }
+
+                    
+
+                    //Cart Sidebar Functionlity
+                    $('.cart-subtotals').text(Shopify.formatMoney(cartdata.total_price));
+
+                }
+            })
+        });
+        //Close Sidebar
+        $('.cart-sidebar--header a').click(function () {
+            $('.cart-black-overlay').fadeOut();
+            $('.cart-sidebar').addClass('hide');
+        });
+        $('.cart-black-overlay').click(function () {
+            $('.cart-black-overlay').fadeOut();
+            $('.cart-sidebar').addClass('hide');
+        });
+        //Open sidebar from header
+        $('.site-header__cart').click(function () {
+            $('.cart-black-overlay').fadeIn();
+            $('.cart-sidebar').removeClass('hide');
+        });
+        //Function
+        function buildCart() {
+        $.ajax({
+            url: "/cart.js",
+            dataType: 'json',
+            success: function (cartdata) {
+                $('.cart-sidebar--items-wrpaper').html('')
+                // Handlebars.js bralette layout
+                var allItems = cartdata.items,
+                    items = [],
+                    item = {};
+                // Add each item to our handlebars.js data
+                $.each(allItems, function (index, varItem) {
+                    var imageSmall = Shopify.resizeImage(varItem.image, 'small');
+                    item = {
+                        id: varItem.id,
+                        title: varItem.product_title,
+                        variant: varItem.variant_title,
+                        url: varItem.url,
+                        price: Shopify.formatMoney(varItem.price,),
+                        quantity: varItem.quantity,
+                        image: imageSmall
+                    };
+                    items.push(item);
+                    let cart_item = `<div class="cart-sidebar-item">
+                                        <a href="javascript:void(0);" class="delete-cart-item"
+                                            data-itemid="${item.id}" referrerpolicy="origin">{% include 'icon-close' %}</a>
+                                        <div class="row align-items-center">
+                                            <div class="col-15">
+                                                <img src="${item.image}" alt="{{ title }}" class="cart-sidebar--itme-image" >
+                                            </div>
+                                            <div class="col-45 h-100">
+                                                <div class="sidebar-cart--product-info">
+                                                    <div class="row">
+                                                        <div class="col-60">
+                                                            <strong>${item.title}</strong>
+                                                            <span>${item.variant} </span>
+                                                            <span>${item.price}</span>
+                                                        </div>
+                                                        <div class="col-60">
+                                                            <div class="row align-items-end">
+                                                                <div class="col-30">
+                                                                    <button type="button" class="cart-sidebar--qty minus">-</button>
+                                                                    <input type="number" min="0" max="100" step="1" value="${item.quantity}"
+                                                                        data-item="${ item.id }" name="cart-prod-qty" class="cart-prod-qty" />
+                                                                <button type="button" class="cart-sidebar--qty plus">+</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                    $('.cart-sidebar--items-wrpaper').append(cart_item);
+                });
+
+                data = {
+                    total: Shopify.formatMoney(cartdata.total_price),
+                    variants: items
+                }
+
+                $('.cart-subtotals').text(Shopify.formatMoney(cartdata.total_price));
+                $('.cart-sidebar').removeClass('hide');
+            }
+        });
+    }
+    })
+</script>

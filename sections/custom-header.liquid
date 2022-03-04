@@ -1,0 +1,72 @@
+<header class="custom-header">
+    <div class="custom-header-wrap">
+            <div class="drawer-link">
+                <button class="drawer-btn">Menu</button>
+            </div>
+            <div class="header-logo">
+                {% if section.settings.logo != blank %}
+                    <a href="/"><img src="{{ section.settings.logo | img_url: '400x' }}" alt="{{ section.settings.logo.alt | default: shop.name | escape }}"></a>
+                {% endif %}
+            </div>
+            <div class="header-cart-link">
+                {%- if shop.customer_accounts_enabled -%}
+                    <a href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}{%- endif -%}" class="account-link">
+                        {%- liquid
+                        if customer
+                            echo 'Account'
+                        else
+                            echo 'Log in'
+                        endif
+                        -%}
+                    </a>
+                {%- endif -%}
+                <button class="site-header__cart header-cart-btn">
+                    {% include 'icon-cart' %}
+                </button>
+            </div>
+    </div>
+</header>
+
+<div class="drawer-list-wrap">
+    <button class="close-drawer-menu">close</button>
+    <ul>
+        {%- for link in section.settings.menu.links -%}
+        
+            <li {% if link.type == 'product_link' %}class="is-product"{% endif %}><a href="{{ link.url }}">
+                {% if link.type == 'product_link' %}
+                <img src="{{ link.object.featured_image.src | product_img_url: 'small' }}" alt="{{ linkCollection.title | escape  }}" />
+                {% endif %} {{ link.title }}</a></li>
+        {%- endfor -%}
+    </ul>
+</div>
+
+<background: linear-gradient(180deg, #685A8F 0%, #9178B5 61.78%);>
+
+<script>
+    $(document).ready(function(){
+        $('.drawer-btn,.close-drawer-menu').click(function(){
+            $('.drawer-list-wrap').toggleClass('active');
+        });
+    });
+</script>
+
+
+{% schema %}
+{
+   "name": "Header",
+   "class": "section-header",
+   "settings": [
+    {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "default": "main-menu",
+      "label": "Menu"
+    }
+   ]
+}
+{% endschema %}
